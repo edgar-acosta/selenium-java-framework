@@ -9,8 +9,8 @@ public class LoginPage {
     // 1. Localizadores (Nuestros "objetos")
     By txtUsername = By.id("user-name");
     By txtPassword = By.id("password");
-    //By btnLogin = By.id("login-button");
-    By btnLogin = By.id("login-button-invalido");
+    By btnLogin = By.id("login-button");
+    
 
     // 2. Constructor
     public LoginPage(WebDriver driver) {
