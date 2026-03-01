@@ -1,13 +1,20 @@
 package com.robot.tests;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.testng.Assert;
+import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -50,7 +57,27 @@ public class LoginTest {
     }
 
     @AfterMethod
-    public void tearDown() {
+    public void tearDown(ITestResult result) {
+        // Solo tomamos la foto si el test FALLÓ
+        if (result.getStatus() == ITestResult.FAILURE) {
+            // 1. Convertimos el driver a "Tomador de capturas"
+            File scrFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+            
+            try {
+                // 2. Creamos la carpeta de destino si no existe
+                File destDir = new File("target/screenshots");
+                if (!destDir.exists()) destDir.mkdirs();
+                
+                // 3. Guardamos la foto con el nombre del test que falló
+                File destFile = new File("target/screenshots/" + result.getName() + ".png");
+                Files.copy(scrFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                
+                System.out.println("❌ Test fallido. Captura guardada en: " + destFile.getAbsolutePath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         if (driver != null) {
             driver.quit();
         }

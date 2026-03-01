@@ -45,6 +45,8 @@ pipeline {
             archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true
             // 'Allure_Report' debe coincidir con el nombre que pusiste en Tools
             allure includeProperties: false, jdk: '', results: [[path: 'Allure_Report']]
+            // NUEVO: Guarda las capturas de pantalla para que las podamos ver en el Dashboard
+            archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
         }
     }
 }
