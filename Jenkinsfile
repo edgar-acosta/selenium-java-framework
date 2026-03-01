@@ -23,8 +23,16 @@ pipeline {
 
         stage('UI Tests (Selenium)') {
             steps {
-                sh 'google-chrome --version || echo "Chrome no encontrado en el PATH"'
-                sh 'mvn test'
+                script {
+                    // Este comando "unset" limpia las librerías del Snap 
+                    // para que Chrome use las del sistema operativo
+                    sh '''
+                        export LD_LIBRARY_PATH=
+                        export PATH=$PATH:/usr/bin
+                        google-chrome --version || echo "Chrome sigue protestando pero intentaremos seguir"
+                        mvn test
+                    '''
+                }
             }
         }
     }
