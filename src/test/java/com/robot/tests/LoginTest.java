@@ -19,6 +19,7 @@ import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
+import org.testng.annotations.Optional;
 import org.testng.annotations.Test;
 
 import com.robot.pages.InventoryPage;
@@ -35,7 +36,7 @@ public class LoginTest {
 
     @Parameters("browser")
     @BeforeMethod
-    public void setup(String browser) {
+    public void setup(@Optional("chrome") String browser) {
         loginPage = new LoginPage(driver);
         inventoryPage = new InventoryPage(driver);
 
