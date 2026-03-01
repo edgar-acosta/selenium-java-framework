@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,26 +35,31 @@ public class LoginTest {
         
         // 1. Leemos lo que viene de Jenkins/Maven (si no hay nada, usamos chrome por defecto)
         String browser = System.getProperty("browser", "chrome");
-        String url = System.getProperty("url", "https://www.saucedemo.com/");
-
+        String url = System.getProperty("url", "https://www.saucedemo.com/").trim();
         System.out.println("🚀 Iniciando prueba en: " + browser + " para la URL: " + url);
 
         if (browser.equalsIgnoreCase("chrome")) {
             WebDriverManager.chromedriver().setup();
             
             ChromeOptions options = new ChromeOptions();
-            options.addArguments("--headless");
+            
+            // 1. Usar el nuevo motor headless
+            options.addArguments("--headless=new"); 
             options.addArguments("--no-sandbox");
             options.addArguments("--disable-dev-shm-usage");
             options.addArguments("--disable-gpu");
-            options.addArguments("--window-size=1920,1080");
+            // 2. Corregir la altura de la ventana (1080)
+            options.addArguments("--window-size=1920,1080"); 
             options.addArguments("--remote-allow-origins=*");
+            
+            // 3. Argumentos de estabilidad extra para entornos Snap
             options.addArguments("--ignore-certificate-errors");
-            options.addArguments("--allow-running-insecure-content");
-            options.addArguments("--disable-web-security");
             options.addArguments("--disable-software-rasterizer");
             
             driver = new ChromeDriver(options);
+            
+            // 4. Darle tiempo a la página para cargar antes de buscar elementos
+            driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
         } 
         else if (browser.equalsIgnoreCase("firefox")) {
             FirefoxOptions ffOptions = new FirefoxOptions();
@@ -62,7 +68,8 @@ public class LoginTest {
             WebDriverManager.firefoxdriver().setup();
             driver = new org.openqa.selenium.firefox.FirefoxDriver(ffOptions);
         }
-      
+        
+        driver.get(url);
         Logger.getLogger("org.openqa.selenium").setLevel(Level.SEVERE);
        
     }
