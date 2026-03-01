@@ -23,7 +23,7 @@ pipeline {
 
         stage('UI Tests (Selenium)') {
             steps {
-                // OJO: Asegúrate de que en tu Java el Chrome esté en modo HEADLESS
+                sh 'google-chrome --version || echo "Chrome no encontrado en el PATH"'
                 sh 'mvn test'
             }
         }
