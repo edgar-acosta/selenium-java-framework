@@ -39,8 +39,12 @@ pipeline {
 
     post {
         always {
-            echo 'Generando reportes de prueba...'
-            // Aquí podrías agregar pasos para publicar reportes de TestNG
+            echo 'Archivando resultados de las pruebas...'
+            // Esto guarda los archivos XML y HTML para que los veas en el Dashboard
+            junit 'target/surefire-reports/*.xml'
+            archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true
+            // 'Allure_Report' debe coincidir con el nombre que pusiste en Tools
+            allure includeProperties: false, jdk: '', results: [[path: 'Allure_Report']]
         }
     }
 }
