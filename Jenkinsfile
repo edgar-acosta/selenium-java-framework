@@ -50,5 +50,15 @@ pipeline {
             archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
             allure includeProperties: false, jdk: '', results: [[path: 'Allure_Report']]
         }
+        success{
+            echo "✅ ¡Victoria! El sistema está estable."
+            // Aquí podrías usar el plugin de Slack:
+            // slackSend color: 'good', message: "Build ${env.BUILD_NUMBER} exitoso en ${env.JOB_NAME}"
+        }
+        failure{
+            archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
+            echo "❌ Alerta: El build ha fallado. Revisa la evidencia."
+            echo "Revisa la evidencia aquí: ${env.BUILD_URL}allure"
+        }
     }
 }

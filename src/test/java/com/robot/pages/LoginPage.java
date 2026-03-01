@@ -35,4 +35,13 @@ public class LoginPage {
     public void clickEnLogin() {
         driver.findElement(btnLogin).click();
     }
+
+    // Localizador del mensaje de error (el cuadrito rojo que sale abajo)
+    private By lblError = By.cssSelector(".error-message-container h3");
+
+    public String getErrorMsg() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        // Esperamos a que el error aparezca
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(lblError)).getText();
+    }
 }

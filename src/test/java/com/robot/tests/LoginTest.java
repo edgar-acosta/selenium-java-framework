@@ -8,20 +8,20 @@ import java.time.Duration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.testng.Assert;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.robot.pages.InventoryPage;
 import com.robot.pages.LoginPage;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
@@ -29,10 +29,14 @@ import io.qameta.allure.Attachment;
 
 public class LoginTest {
     WebDriver driver;
+    LoginPage loginPage;
+    InventoryPage inventoryPage;
 
     @BeforeMethod
     public void setup() {
-        
+        loginPage = new LoginPage(driver);
+        inventoryPage = new InventoryPage(driver);
+
         // 1. Leemos lo que viene de Jenkins/Maven (si no hay nada, usamos chrome por defecto)
         String browser = System.getProperty("browser", "chrome");
         String url = System.getProperty("url", "https://www.saucedemo.com/").trim();
@@ -72,6 +76,29 @@ public class LoginTest {
         driver.get(url);
         Logger.getLogger("org.openqa.selenium").setLevel(Level.SEVERE);
        
+    }
+
+    @DataProvider(name = "loginData")
+    public Object[][] getData() {
+        return new Object[][] {
+            {"standard_user", "secret_sauce", "valid"},
+            {"locked_out_user", "secret_sauce", "locked"},
+            {"problem_user", "secret_sauce", "valid"}
+        };
+    }
+
+    @Test(dataProvider = "loginData")
+    public void validarLoginMultiple(String user, String pass, String type) {
+        
+        loginPage.escribirUsuario(user);
+        loginPage.escribirPassword(pass);
+        loginPage.clickEnLogin();
+        
+        if(type.equals("valid")) {
+            Assert.assertTrue(inventoryPage.isTitleVisible());
+        } else {
+            Assert.assertTrue(loginPage.getErrorMsg().contains("locked out"));
+        }
     }
 
     @Test
