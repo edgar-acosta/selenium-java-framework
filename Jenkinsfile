@@ -33,9 +33,7 @@ pipeline {
                     // para que Chrome use las del sistema operativo
                     sh '''
                         export LD_LIBRARY_PATH=
-                        export PATH=$PATH:/usr/bin
-                        google-chrome --version || echo "Chrome sigue protestando pero intentaremos seguir"
-                        mvn test
+                        mvn test -DsuiteXmlFile=testng.xml
                     '''
                 }
             }

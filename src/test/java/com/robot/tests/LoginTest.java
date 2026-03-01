@@ -26,19 +26,21 @@ import com.robot.pages.LoginPage;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import io.qameta.allure.Attachment;
+import org.testng.annotations.Parameters;
 
 public class LoginTest {
     WebDriver driver;
     LoginPage loginPage;
     InventoryPage inventoryPage;
 
+    @Parameters("browser")
     @BeforeMethod
-    public void setup() {
+    public void setup(String browser) {
         loginPage = new LoginPage(driver);
         inventoryPage = new InventoryPage(driver);
 
-        // 1. Leemos lo que viene de Jenkins/Maven (si no hay nada, usamos chrome por defecto)
-        String browser = System.getProperty("browser", "chrome");
+        
+        //String browser = System.getProperty("browser", "chrome");
         String url = System.getProperty("url", "https://www.saucedemo.com/").trim();
         System.out.println("🚀 Iniciando prueba en: " + browser + " para la URL: " + url);
 
@@ -46,7 +48,8 @@ public class LoginTest {
             WebDriverManager.chromedriver().setup();
             
             ChromeOptions options = new ChromeOptions();
-            
+            options.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--window-size=1920,1080");
+            /*
             // 1. Usar el nuevo motor headless
             options.addArguments("--headless=new"); 
             options.addArguments("--no-sandbox");
@@ -59,7 +62,7 @@ public class LoginTest {
             // 3. Argumentos de estabilidad extra para entornos Snap
             options.addArguments("--ignore-certificate-errors");
             options.addArguments("--disable-software-rasterizer");
-            
+             */
             driver = new ChromeDriver(options);
             
             // 4. Darle tiempo a la página para cargar antes de buscar elementos
