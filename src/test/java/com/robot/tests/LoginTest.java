@@ -51,6 +51,7 @@ public class LoginTest {
         } else {
             WebDriverManager.firefoxdriver().setup();
             FirefoxOptions ffOptions = new FirefoxOptions();
+            ffOptions.setBinary("/usr/bin/firefox");
             ffOptions.addArguments("-headless", "--no-sandbox", "--width=1920", "--height=1080");
             localDriver = new FirefoxDriver(ffOptions);
         }

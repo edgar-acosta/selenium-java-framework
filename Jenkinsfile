@@ -29,10 +29,12 @@ pipeline {
         stage('UI Tests (Selenium)') {
             steps {
                 script {
-                    // Este comando "unset" limpia las librerías del Snap 
-                    // para que Chrome use las del sistema operativo
                     sh '''
-                        export LD_LIBRARY_PATH=
+                        # Verificamos si los navegadores responden
+                        google-chrome --version || echo "Chrome no encontrado"
+                        firefox --version || echo "Firefox no encontrado"
+
+                        export MOZ_HEADLESS=1
                         mvn test -DsuiteXmlFile=testng.xml
                     '''
                 }
