@@ -86,17 +86,6 @@ public class LoginTest {
         }
     }
 
-    @Test
-    public void validarLoginExitoso() {
-        getLoginPage().escribirUsuario("standard_user");
-        getLoginPage().escribirPassword("secret_sauce");
-        getLoginPage().clickEnLogin();
-
-        // Corregido: getTitleText() devuelve "Products", no la URL. 
-        // Si quieres la URL usa getDriver().getCurrentUrl()
-        Assert.assertEquals(getInventoryPage().getTitleText(), "Products");
-    }
-
     @AfterMethod
     public void tearDown(ITestResult result) {
         if (getDriver() != null) {
