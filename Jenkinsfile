@@ -1,5 +1,10 @@
 pipeline {
     agent any
+    parameters {
+        // Esto crea el menú en la interfaz de Jenkins
+        choice(name: 'BROWSER', choices: ['chrome', 'firefox'], description: '¿En qué navegador quieres ejecutar?')
+        string(name: 'ENV', defaultValue: 'https://www.saucedemo.com/', description: 'URL del ambiente')
+    }
 
     tools {
         // Usa los nombres que configuraste en "Global Tool Configuration"
@@ -40,13 +45,10 @@ pipeline {
     post {
         always {
             echo 'Archivando resultados de las pruebas...'
-            // Esto guarda los archivos XML y HTML para que los veas en el Dashboard
             junit 'target/surefire-reports/*.xml'
             archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true
-            // 'Allure_Report' debe coincidir con el nombre que pusiste en Tools
-            allure includeProperties: false, jdk: '', results: [[path: 'Allure_Report']]
-            // NUEVO: Guarda las capturas de pantalla para que las podamos ver en el Dashboard
             archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
+            allure includeProperties: false, jdk: '', results: [[path: 'Allure_Report']]
         }
     }
 }

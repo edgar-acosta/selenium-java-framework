@@ -13,6 +13,8 @@ import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.testng.Assert;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
@@ -29,21 +31,32 @@ public class LoginTest {
 
     @BeforeMethod
     public void setup() {
-        WebDriverManager.chromedriver().setup();
-        ChromeOptions options = new ChromeOptions();
         
-        Logger.getLogger("org.openqa.selenium").setLevel(Level.SEVERE);
-        
-        // CONFIGURACIÓN PARA LINUX/CI
-        options.addArguments("--headless");
-        options.addArguments("--no-sandbox"); // Vital para Jenkins
-        options.addArguments("--disable-dev-shm-usage"); // Evita que se quede sin memoria en contenedores
-        options.addArguments("--disable-gpu"); // Recomendado para Linux sin tarjeta gráfica
-        options.addArguments("--window-size=1920,1080"); // Para que los elementos no se amontonen
-        options.addArguments("--remote-allow-origins=*"); // Evita bloqueos de seguridad de red
+        // 1. Leemos lo que viene de Jenkins/Maven (si no hay nada, usamos chrome por defecto)
+        String browser = System.getProperty("browser", "chrome");
+        String url = System.getProperty("url", "https://www.saucedemo.com/");
 
-        driver = new ChromeDriver(options);
-        driver.get("https://www.saucedemo.com/");
+        System.out.println("🚀 Iniciando prueba en: " + browser + " para la URL: " + url);
+
+        if (browser.equalsIgnoreCase("chrome")) {
+            WebDriverManager.chromedriver().setup();
+            ChromeOptions options = new ChromeOptions();
+            options.addArguments("--headless=new", "--no-sandbox", 
+            "--disable-dev-shm-usage","--disable-gpu","--window-size=1920,100",
+            "--remote-allow-origins=*");
+            
+            driver = new ChromeDriver(options);
+        } 
+        else if (browser.equalsIgnoreCase("firefox")) {
+            FirefoxOptions ffOptions = new FirefoxOptions();
+            ffOptions.addArguments("-headless","--width=1920","--height=1080","--disable-gpu","--no-sandbox"); 
+ 
+            WebDriverManager.firefoxdriver().setup();
+            driver = new org.openqa.selenium.firefox.FirefoxDriver(ffOptions);
+        }
+      
+        Logger.getLogger("org.openqa.selenium").setLevel(Level.SEVERE);
+       
     }
 
     @Test
