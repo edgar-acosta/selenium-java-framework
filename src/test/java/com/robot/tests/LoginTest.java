@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
 import com.robot.pages.LoginPage;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
-
+import io.qameta.allure.Attachment;
 
 public class LoginTest {
     WebDriver driver;
@@ -76,10 +76,16 @@ public class LoginTest {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            captureScreenshotAllure(driver);
         }
 
         if (driver != null) {
             driver.quit();
         }
+    }
+
+    @Attachment(value = "Screenshot on Failure", type = "image/png")
+    public byte[] captureScreenshotAllure(WebDriver driver) {
+        return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
     }
 }
