@@ -4,15 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.time.Duration;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.testng.Assert;
 import org.testng.ITestResult;
@@ -30,59 +28,42 @@ import io.qameta.allure.Attachment;
 import org.testng.annotations.Parameters;
 
 public class LoginTest {
-    WebDriver driver;
-    LoginPage loginPage;
-    InventoryPage inventoryPage;
+    // 1. ThreadLocal para el driver y las páginas (Seguridad total en hilos)
+    private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
+    private static ThreadLocal<LoginPage> loginPage = new ThreadLocal<>();
+    private static ThreadLocal<InventoryPage> inventoryPage = new ThreadLocal<>();
+    
+    // Métodos auxiliares para obtener las instancias del hilo actual
+    public WebDriver getDriver() { return driver.get(); }
+    public LoginPage getLoginPage() { return loginPage.get(); }
+    public InventoryPage getInventoryPage() { return inventoryPage.get(); }
 
     @Parameters("browser")
     @BeforeMethod
     public void setup(@Optional("chrome") String browser) {
-        loginPage = new LoginPage(driver);
-        inventoryPage = new InventoryPage(driver);
-
-        
-        //String browser = System.getProperty("browser", "chrome");
-        String url = System.getProperty("url", "https://www.saucedemo.com/").trim();
-        System.out.println("🚀 Iniciando prueba en: " + browser + " para la URL: " + url);
+        WebDriver localDriver;
 
         if (browser.equalsIgnoreCase("chrome")) {
             WebDriverManager.chromedriver().setup();
-            
             ChromeOptions options = new ChromeOptions();
             options.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--window-size=1920,1080");
-            /*
-            // 1. Usar el nuevo motor headless
-            options.addArguments("--headless=new"); 
-            options.addArguments("--no-sandbox");
-            options.addArguments("--disable-dev-shm-usage");
-            options.addArguments("--disable-gpu");
-            // 2. Corregir la altura de la ventana (1080)
-            options.addArguments("--window-size=1920,1080"); 
-            options.addArguments("--remote-allow-origins=*");
-            
-            // 3. Argumentos de estabilidad extra para entornos Snap
-            options.addArguments("--ignore-certificate-errors");
-            options.addArguments("--disable-software-rasterizer");
-             */
-            driver = new ChromeDriver(options);
-            
-            // 4. Darle tiempo a la página para cargar antes de buscar elementos
-            driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
-        } 
-        else if (browser.equalsIgnoreCase("firefox")) {
-            FirefoxOptions ffOptions = new FirefoxOptions();
-            ffOptions.addArguments("--headless","--width=1920","--height=1080","--disable-gpu","--no-sandbox"); 
- 
+            localDriver = new ChromeDriver(options);
+        } else {
             WebDriverManager.firefoxdriver().setup();
-            driver = new org.openqa.selenium.firefox.FirefoxDriver(ffOptions);
+            FirefoxOptions ffOptions = new FirefoxOptions();
+            ffOptions.addArguments("-headless", "--no-sandbox", "--width=1920", "--height=1080");
+            localDriver = new FirefoxDriver(ffOptions);
         }
+
+        // Guardamos todo en sus respectivos hilos
+        driver.set(localDriver);
+        loginPage.set(new LoginPage(getDriver()));
+        inventoryPage.set(new InventoryPage(getDriver()));
         
-        driver.get(url);
-        Logger.getLogger("org.openqa.selenium").setLevel(Level.SEVERE);
-       
+        getDriver().get("https://www.saucedemo.com/");
     }
 
-    @DataProvider(name = "loginData")
+    @DataProvider(name = "loginData", parallel = true) // Agregamos parallel=true aquí también
     public Object[][] getData() {
         return new Object[][] {
             {"standard_user", "secret_sauce", "valid"},
@@ -93,56 +74,50 @@ public class LoginTest {
 
     @Test(dataProvider = "loginData")
     public void validarLoginMultiple(String user, String pass, String type) {
-        
-        loginPage.escribirUsuario(user);
-        loginPage.escribirPassword(pass);
-        loginPage.clickEnLogin();
+        getLoginPage().escribirUsuario(user);
+        getLoginPage().escribirPassword(pass);
+        getLoginPage().clickEnLogin();
         
         if(type.equals("valid")) {
-            Assert.assertTrue(inventoryPage.isTitleVisible());
+            Assert.assertTrue(getInventoryPage().isTitleVisible(), "El título no es visible para el usuario: " + user);
         } else {
-            Assert.assertTrue(loginPage.getErrorMsg().contains("locked out"));
+            Assert.assertTrue(getLoginPage().getErrorMsg().contains("locked out"), "No se mostró el error de bloqueo para: " + user);
         }
     }
 
     @Test
     public void validarLoginExitoso() {
-        LoginPage login = new LoginPage(driver); // Instanciamos la página
-        login.escribirUsuario("standard_user");
-        login.escribirPassword("secret_sauce");
-        login.clickEnLogin();
+        getLoginPage().escribirUsuario("standard_user");
+        getLoginPage().escribirPassword("secret_sauce");
+        getLoginPage().clickEnLogin();
 
-        Assert.assertTrue(driver.getCurrentUrl().contains("inventory.html"));
+        // Corregido: getTitleText() devuelve "Products", no la URL. 
+        // Si quieres la URL usa getDriver().getCurrentUrl()
+        Assert.assertEquals(getInventoryPage().getTitleText(), "Products");
     }
 
     @AfterMethod
     public void tearDown(ITestResult result) {
-        // Solo tomamos la foto si el test FALLÓ
-        if (result.getStatus() == ITestResult.FAILURE) {
-            System.out.println("DEBUG: La URL actual es: " + driver.getCurrentUrl());
-            System.out.println("DEBUG: Título de la página: " + driver.getTitle());
-
-            // 1. Convertimos el driver a "Tomador de capturas"
-            File scrFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-            
-            try {
-                // 2. Creamos la carpeta de destino si no existe
-                File destDir = new File("target/screenshots");
-                if (!destDir.exists()) destDir.mkdirs();
+        if (getDriver() != null) {
+            if (result.getStatus() == ITestResult.FAILURE) {
+                // Captura para Allure
+                captureScreenshotAllure(getDriver());
                 
-                // 3. Guardamos la foto con el nombre del test que falló
-                File destFile = new File("target/screenshots/" + result.getName() + ".png");
-                Files.copy(scrFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                
-                System.out.println("❌ Test fallido. Captura guardada en: " + destFile.getAbsolutePath());
-            } catch (IOException e) {
-                e.printStackTrace();
+                // Captura para carpeta local (Corregido el casting)
+                try {
+                    File scrFile = ((TakesScreenshot) getDriver()).getScreenshotAs(OutputType.FILE);
+                    File destFile = new File("target/screenshots/" + result.getName() + ".png");
+                    Files.createDirectories(destFile.getParentFile().toPath());
+                    Files.copy(scrFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            captureScreenshotAllure(driver);
-        }
-
-        if (driver != null) {
-            driver.quit();
+            // Cierre correcto
+            getDriver().quit();
+            driver.remove(); // Limpieza vital
+            loginPage.remove();
+            inventoryPage.remove();
         }
     }
 
