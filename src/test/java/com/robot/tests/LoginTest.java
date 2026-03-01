@@ -28,12 +28,12 @@ public class LoginTest {
         Logger.getLogger("org.openqa.selenium").setLevel(Level.SEVERE);
         
         // CONFIGURACIÓN PARA LINUX/CI
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--headless");
-        
-        // Descomenta la siguiente línea para correr sin ver la ventana (obligatorio en Jenkins)
-        // options.addArguments("--headless"); 
+        options.addArguments("--no-sandbox"); // Vital para Jenkins
+        options.addArguments("--disable-dev-shm-usage"); // Evita que se quede sin memoria en contenedores
+        options.addArguments("--disable-gpu"); // Recomendado para Linux sin tarjeta gráfica
+        options.addArguments("--window-size=1920,1080"); // Para que los elementos no se amontonen
+        options.addArguments("--remote-allow-origins=*"); // Evita bloqueos de seguridad de red
 
         driver = new ChromeDriver(options);
         driver.get("https://www.saucedemo.com/");
