@@ -40,13 +40,18 @@ public class LoginTest {
 
         if (browser.equalsIgnoreCase("chrome")) {
             WebDriverManager.chromedriver().setup();
+            
             ChromeOptions options = new ChromeOptions();
             options.addArguments("--headless");
             options.addArguments("--no-sandbox");
             options.addArguments("--disable-dev-shm-usage");
             options.addArguments("--disable-gpu");
-            options.addArguments("--window-size=1920,100");
+            options.addArguments("--window-size=1920,1080");
             options.addArguments("--remote-allow-origins=*");
+            options.addArguments("--ignore-certificate-errors");
+            options.addArguments("--allow-running-insecure-content");
+            options.addArguments("--disable-web-security");
+            options.addArguments("--disable-software-rasterizer");
             
             driver = new ChromeDriver(options);
         } 
@@ -76,6 +81,9 @@ public class LoginTest {
     public void tearDown(ITestResult result) {
         // Solo tomamos la foto si el test FALLÓ
         if (result.getStatus() == ITestResult.FAILURE) {
+            System.out.println("DEBUG: La URL actual es: " + driver.getCurrentUrl());
+            System.out.println("DEBUG: Título de la página: " + driver.getTitle());
+
             // 1. Convertimos el driver a "Tomador de capturas"
             File scrFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
             
