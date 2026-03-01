@@ -41,15 +41,18 @@ public class LoginTest {
         if (browser.equalsIgnoreCase("chrome")) {
             WebDriverManager.chromedriver().setup();
             ChromeOptions options = new ChromeOptions();
-            options.addArguments("--headless=new", "--no-sandbox", 
-            "--disable-dev-shm-usage","--disable-gpu","--window-size=1920,100",
-            "--remote-allow-origins=*");
+            options.addArguments("--headless");
+            options.addArguments("--no-sandbox");
+            options.addArguments("--disable-dev-shm-usage");
+            options.addArguments("--disable-gpu");
+            options.addArguments("--window-size=1920,100");
+            options.addArguments("--remote-allow-origins=*");
             
             driver = new ChromeDriver(options);
         } 
         else if (browser.equalsIgnoreCase("firefox")) {
             FirefoxOptions ffOptions = new FirefoxOptions();
-            ffOptions.addArguments("-headless","--width=1920","--height=1080","--disable-gpu","--no-sandbox"); 
+            ffOptions.addArguments("--headless","--width=1920","--height=1080","--disable-gpu","--no-sandbox"); 
  
             WebDriverManager.firefoxdriver().setup();
             driver = new org.openqa.selenium.firefox.FirefoxDriver(ffOptions);
