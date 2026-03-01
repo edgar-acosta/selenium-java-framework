@@ -30,6 +30,8 @@ public class LoginTest {
         // CONFIGURACIÓN PARA LINUX/CI
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--headless");
+        
         // Descomenta la siguiente línea para correr sin ver la ventana (obligatorio en Jenkins)
         // options.addArguments("--headless"); 
 
