@@ -17,6 +17,7 @@ pipeline {
             steps {
                 // Jenkins descargará el código solo
                 echo 'Descargando código de GitHub...'
+                checkout scm
             }
         }
 
@@ -30,11 +31,15 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        # Verificamos si los navegadores responden
-                        google-chrome --version || echo "Chrome no encontrado"
-                        firefox --version || echo "Firefox no encontrado"
-
+                        # 1. Limpieza de entorno para evitar conflictos de librerías
+                        unset LD_LIBRARY_PATH
                         export MOZ_HEADLESS=1
+                        
+                        # 2. Verificación de binarios
+                        google-chrome --version || echo "Chrome falló"
+                        firefox --version || echo "Firefox falló"
+                        
+                        # 3. Ejecución de la suite
                         mvn test -DsuiteXmlFile=testng.xml
                     '''
                 }
@@ -49,7 +54,7 @@ pipeline {
             archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true
             archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
             allure includeProperties: false, jdk: '', results: [[path: 'Allure_Report']]
-        }
+       }
         success{
             echo "✅ ¡Victoria! El sistema está estable."
             // Aquí podrías usar el plugin de Slack:
