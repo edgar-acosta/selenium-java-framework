@@ -56,12 +56,18 @@ pipeline {
     post {
         always {
             allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
+            // Agregamos allowEmptyArchive: true para que no se ponga amarillo si no hay fallos
             archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
         }
         success {
             script {
-                // Usamos "text" para Slack y escapamos las comillas correctamente
                 sh "curl -X POST -H 'Content-Type: application/json' --data '{\"text\":\"✅ *¡Build Exitoso!*\\n*Proyecto:* ${env.JOB_NAME}\\n*Build:* #${env.BUILD_NUMBER}\\n*Reporte:* ${env.BUILD_URL}allure\"}' \$WEBHOOK_URL"
+            }
+        }
+        unstable {
+            script {
+                // Si el build queda inestable, también queremos saberlo
+                sh "curl -X POST -H 'Content-Type: application/json' --data '{\"text\":\"⚠️ *Build Inestable*\\n*Proyecto:* ${env.JOB_NAME}\\n*Nota:* Los tests pasaron pero hubo advertencias en el pipeline.\\n*Reporte:* ${env.BUILD_URL}allure\"}' \$WEBHOOK_URL"
             }
         }
         failure {
