@@ -1,5 +1,11 @@
 pipeline {
     agent any
+
+    // Inyectamos la credencial aquí
+    environment {
+        WEBHOOK_URL = credentials('SLACK_WEBHOOK_URL')
+    }
+
     parameters {
         // Esto crea el menú en la interfaz de Jenkins
         choice(name: 'BROWSER', choices: ['chrome', 'firefox'], description: '¿En qué navegador quieres ejecutar?')
@@ -49,21 +55,22 @@ pipeline {
 
     post {
         always {
-            echo 'Archivando resultados de las pruebas...'
-            junit 'target/surefire-reports/*.xml'
-            archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true
+            allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
             archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
-            allure includeProperties: false, jdk: '', results: [[path: 'Allure_Report']]
-       }
-        success{
-            echo "✅ ¡Victoria! El sistema está estable."
-            // Aquí podrías usar el plugin de Slack:
-            // slackSend color: 'good', message: "Build ${env.BUILD_NUMBER} exitoso en ${env.JOB_NAME}"
         }
-        failure{
-            archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
-            echo "❌ Alerta: El build ha fallado. Revisa la evidencia."
-            echo "Revisa la evidencia aquí: ${env.BUILD_URL}allure"
+        success {
+            sh """
+                curl -H "Content-Type: application/json" -X POST \
+                -d '{"content": "✅ **¡Build Exitoso!**\\nProyecto: ${env.JOB_NAME}\\nReporte: ${env.BUILD_URL}allure"}' \
+                \$WEBHOOK_URL
+            """
+        }
+        failure {
+            sh """
+                curl -H "Content-Type: application/json" -X POST \
+                -d '{"content": "❌ **¡Alerta de Fallo!**\\nProyecto: ${env.JOB_NAME}\\nEvidencia: ${env.BUILD_URL}allure"}' \
+                \$WEBHOOK_URL
+            """
         }
     }
 }
