@@ -59,18 +59,15 @@ pipeline {
             archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
         }
         success {
-            sh """
-                curl -H "Content-Type: application/json" -X POST \
-                -d '{"content": "✅ **¡Build Exitoso!**\\nProyecto: ${env.JOB_NAME}\\nReporte: ${env.BUILD_URL}allure"}' \
-                \$WEBHOOK_URL
-            """
+            script {
+                // Usamos "text" para Slack y escapamos las comillas correctamente
+                sh "curl -X POST -H 'Content-Type: application/json' --data '{\"text\":\"✅ *¡Build Exitoso!*\\n*Proyecto:* ${env.JOB_NAME}\\n*Build:* #${env.BUILD_NUMBER}\\n*Reporte:* ${env.BUILD_URL}allure\"}' \$WEBHOOK_URL"
+            }
         }
         failure {
-            sh """
-                curl -H "Content-Type: application/json" -X POST \
-                -d '{"content": "❌ **¡Alerta de Fallo!**\\nProyecto: ${env.JOB_NAME}\\nEvidencia: ${env.BUILD_URL}allure"}' \
-                \$WEBHOOK_URL
-            """
+            script {
+                sh "curl -X POST -H 'Content-Type: application/json' --data '{\"text\":\"❌ *¡Alerta de Fallo!*\\n*Proyecto:* ${env.JOB_NAME}\\n*Build:* #${env.BUILD_NUMBER}\\n*Evidencia:* ${env.BUILD_URL}allure\"}' \$WEBHOOK_URL"
+            }
         }
     }
 }
