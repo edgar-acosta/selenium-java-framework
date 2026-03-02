@@ -1,47 +1,51 @@
 package com.robot.pages;
 
-import java.time.Duration;
-
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
-public class LoginPage {
+public class LoginPage extends BasePage{
     WebDriver driver;
 
     // 1. Localizadores (Nuestros "objetos")
-    By txtUsername = By.id("user-name");
-    By txtPassword = By.id("password");
-    By btnLogin = By.id("login-button");
-    
+    private By txtUsername  = By.id("user-name");
+    private By txtPassword  = By.id("password");
+    private By btnLogin     = By.id("login-button");
+    private By errorMessage = By.cssSelector("h3[data-test='error']");
 
     // 2. Constructor
     public LoginPage(WebDriver driver) {
+        super(driver);
         this.driver = driver;
     }
 
     // 3. Acciones (Nuestros "servicios")
     public void escribirUsuario(String usuario) {    
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(txtUsername));
-        driver.findElement(txtUsername).sendKeys(usuario);
+        type(txtUsername, usuario);
     }
 
     public void escribirPassword(String password) {
-        driver.findElement(txtPassword).sendKeys(password);
+        type(txtPassword, password);
     }
 
     public void clickEnLogin() {
-        driver.findElement(btnLogin).click();
+        click(btnLogin);
     }
 
-    // Localizador del mensaje de error (el cuadrito rojo que sale abajo)
-    private By lblError = By.cssSelector(".error-message-container h3");
+    // 4. Métodos de Alto Nivel (Flujos)
+    // Este método combina acciones para hacer el test más rápido de escribir
+    public void loginAs(String user, String pass) {
+        escribirUsuario(user);
+        escribirPassword(pass);
+        clickEnLogin();
+    }
 
-    public String getErrorMsg() {
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
-        // Esperamos a que el error aparezca
-        return wait.until(ExpectedConditions.visibilityOfElementLocated(lblError)).getText();
+    // 5. Validaciones (Para el caso del usuario bloqueado)
+    
+    public String getErrorText() {
+        return getText(errorMessage);
+    }
+
+    public boolean isErrorDisplayed() {
+        return isDisplayed(errorMessage);
     }
 }

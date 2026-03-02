@@ -82,7 +82,7 @@ public class LoginTest {
         if(type.equals("valid")) {
             Assert.assertTrue(getInventoryPage().isTitleVisible(), "El título no es visible para el usuario: " + user);
         } else {
-            Assert.assertTrue(getLoginPage().getErrorMsg().contains("locked out"), "No se mostró el error de bloqueo para: " + user);
+            Assert.assertTrue(getLoginPage().getErrorText().contains("locked out"), "No se mostró el error de bloqueo para: " + user);
         }
     }
 
